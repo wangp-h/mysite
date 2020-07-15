@@ -4,9 +4,13 @@ ehthumbs.db
 Desktop.ini
 
 # Python:
-*.py[cod]
+*.pyc
 *.so
 *.egg
 *.egg-info
 dist
 build
+
+# My ignore:
+db.sqlite3
+.idea/
