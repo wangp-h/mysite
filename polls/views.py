@@ -1,18 +1,44 @@
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+from django.views import generic
+
+from .models import Question, Choice
+
+
+# from django.http import Http404
 
 
 # Create your views here.
-def add(request):
-    a = request.GET['a']
-    b = request.GET['b']
-    c = int(a) + int(b)
-    return HttpResponse(str(c))
+class IndexView(generic.ListView):
+    template_name = 'polls/index.html'
+    context_object_name = 'last_question_list'
+
+    def get_queryset(self):
+        """Return the last five published questions."""
+        return Question.objects.order_by('-pub_date')[:5]
 
 
-def add2(request, a, b):
-    c = int(a) + int(b)
-    return HttpResponse(str(c))
+class DetailView(generic.DetailView):
+    model = Question
+    template_name = 'polls/detail.html'
 
 
-def index(request):
-    return HttpResponse('hello, Django')
+class ResultsView(generic.DetailView):
+    model = Question
+    template_name = 'polls/results.html'
+
+
+def vote(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    try:
+        selected_choice = question.choice_set.get(pk=request.POST['choice'])
+    except (KeyError, Choice.DoesNotExist):
+        return render(request, 'polls/detail.html', {
+            'question': question,
+            'error_message': "You didn't select a choice.",
+        })
+    else:
+        selected_choice.votes += 1
+        selected_choice.save()
+        return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
